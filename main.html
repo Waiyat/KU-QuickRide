@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>KU QUICKRIDE — Bike Hire & Delivery (LocalStorage)</title>
+<meta name="description" content="KU QuickRide — bike hire & delivery for Kenyatta University students. Fast, verified, and secure.">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Brand & Basic Layout ---------- */
+  :root{
+    --navy:#0a192f;
+    --accent:#ff8c00;
+    --muted:#a8b2d1;
+    --card:#0b1d3a;
+    --bg:#071227;
+    --white:#ffffff;
+    --success:#2ecc71;
+    --danger:#e74c3c;
+    --glass: rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:"Lato",system-ui,Arial;
+    color:var(--muted);
+    background:linear-gradient(180deg,var(--bg),#041225 120%);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    line-height:1.4;
+  }
+  .container{max-width:1100px;margin:0 auto;padding:0 18px;}
+  a{color:var(--accent);text-decoration:none}
+  h1,h2,h3{font-family:"Poppins",sans-serif;color:var(--white)}
+  button.btn{
+    background:var(--accent);
+    color:var(--white);
+    border:0;padding:10px 16px;border-radius:8px;font-weight:700;cursor:pointer;
+  }
+  button.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+  button.btn.small{padding:6px 10px;font-size:0.9rem}
+
+  header.topbar{
+    position:sticky;top:0;z-index:200;background:linear-gradient(180deg,rgba(10,25,47,0.95),rgba(10,25,47,0.9));
+    border-bottom:1px solid rgba(255,255,255,0.03);backdrop-filter:blur(6px)
+  }
+  .topbar .inner{display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{font-size:1.25rem;color:var(--white);font-weight:700}
+  .nav{display:flex;gap:14px;align-items:center}
+  .nav a, .nav button{color:var(--muted)}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:84px 0 40px}
+  .hero-card{display:flex;gap:28px;align-items:center;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px;padding:30px}
+  .hero-left{flex:1}
+  .hero-right{width:320px}
+  .hero h1{font-size:2.6rem;margin-bottom:8px}
+  .hero p.lead{color:var(--muted);margin-bottom:16px}
+  .live-stats{display:flex;gap:12px;flex-wrap:wrap}
+  .stat{background:var(--card);padding:10px 14px;border-radius:10px;text-align:center;min-width:100px}
+  .stat .num{color:var(--accent);font-size:1.2rem;font-weight:700}
+
+  /* ---------- sections ---------- */
+  section.card{background:var(--card);padding:18px;border-radius:12px;margin-top:18px}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .services .service{padding:14px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);border-left:6px solid var(--accent)}
+
+  /* ---------- modal ---------- */
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:300}
+  .modal.open{display:flex}
+  .modal-card{width:100%;max-width:680px;background:linear-gradient(180deg,var(--navy),var(--card));border-radius:10px;padding:20px;position:relative;border:1px solid rgba(255,255,255,0.04)}
+  .close-x{position:absolute;right:14px;top:14px;color:var(--muted);font-size:22px;cursor:pointer}
+  .modal h2{color:var(--white);margin-bottom:8px}
+  .modal .form-row{display:flex;gap:10px}
+  .form-group{margin-top:10px}
+  label{display:block;color:var(--muted);margin-bottom:6px;font-size:0.95rem}
+  input[type="text"], input[type="tel"], input[type="number"], select, textarea{
+    width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--white)
+  }
+  textarea{min-height:100px;resize:vertical}
+  .price-display{margin-top:12px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;color:var(--accent);font-weight:700;text-align:center}
+
+  /* ---------- admin dashboard ---------- */
+  #admin-dashboard{display:none;position:fixed;inset:0;background:linear-gradient(180deg,rgba(5,10,20,0.98),rgba(8,16,26,0.98));z-index:400;overflow:auto;padding:24px}
+  .admin-wrap{max-width:1200px;margin:20px auto;color:var(--muted)}
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tab{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer}
+  .tab.active{background:var(--accent);color:#111}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{padding:8px;border:1px solid rgba(255,255,255,0.03);color:var(--muted);font-size:0.9rem}
+  th{background:rgba(255,255,255,0.02);color:var(--white)}
+  .actions button{margin-right:6px;margin-bottom:6px}
+
+  /* small helpers */
+  .muted{color:var(--muted)}
+  .kbd{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:6px;color:var(--muted);font-weight:700}
+
+  /* responsive */
+  @media(max-width:900px){
+    .grid{grid-template-columns:1fr}
+    .hero-card{flex-direction:column}
+    .hero-right{width:100%}
+  }
+</style>
+</head>
+<body>
+  <!-- ---------- TOPBAR ---------- -->
+  <header class="topbar">
+    <div class="container inner">
+      <div class="brand">
+        <div class="logo">KU QUICKRIDE</div>
+        <div class="muted" style="font-size:0.9rem">One life — ride it well</div>
+      </div>
+      <nav class="nav">
+        <a href="#home">Home</a>
+        <a href="#services">Services</a>
+        <a href="#zones">Pricing</a>
+        <a href="https://chat.whatsapp.com/IFrOW5WsyV5DaB66tIeuH8" target="_blank">Join Group</a>
+        <button id="btn-open-book" class="btn" style="color: white;">Book Now</button>
+        <button id="btn-open-admin-login" class="btn ghost">Admin</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ---------- HERO ---------- -->
+  <main class="container">
+    <section class="hero">
+      <div class="hero-card">
+        <div class="hero-left">
+          <h1>Tired of walking? Get moving or deliver in minutes.</h1>
+          <p class="lead muted">Fast, affordable bike hire and deliveries for KU students. Payment via M-Pesa (Pochi la Biashara — 0748026801).</p>
+          <div style="margin-top:14px">
+            <button id="hero-book-btn" class="btn">Book a Ride or Delivery</button>
+            <a href="https://chat.whatsapp.com/IFrOW5WsyV5DaB66tIeuH8" target="_blank" class="muted" style="margin-left:12px">Join WhatsApp group</a>
+          </div>
+
+          <div class="live-stats" style="margin-top:18px">
+            <div class="stat"><div class="num" id="stat-total-bookings">0</div><div class="muted">Total bookings</div></div>
+            <div class="stat"><div class="num" id="stat-bikes">0</div><div class="muted">Available bikes</div></div>
+            <div class="stat"><div class="num" id="stat-riders">0</div><div class="muted">Verified riders</div></div>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <img src="rides.jpeg?text=KU+QuickRide" alt="KU QuickRide preview" style="width:100%;border-radius:8px;display:block">
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- SERVICES ---------- -->
+    <section id="services" class="card">
+      <h2>Our Services</h2>
+      <div class="grid services" style="margin-top:8px">
+        <div class="service">
+          <h3>Bike Hire</h3>
+          <p class="muted">KES <span class="kbd">40</span> per hour. Student ID verified riders. Book a bike, choose pickup point, pay via M-Pesa.</p>
+          <ul class="muted" style="margin-top:8px">
+            <li>Perfect for classes, quick errands, or campus runs</li>
+            <li>No cash — pay only via Pochi la Biashara (0748026801)</li>
+          </ul>
+        </div>
+        <div class="service">
+          <h3>Quick Delivery</h3>
+          <p class="muted">Deliver documents, food, or small packages fast across KU & nearby zones. Transparent pricing by zone + surcharges for item types.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ZONES ---------- -->
+    <section id="zones" class="card">
+      <h2>Delivery Zones & Pricing</h2>
+      <div id="zones-container" style="margin-top:8px" class="muted">
+        <!-- zones injected by JS -->
+      </div>
+      <div style="margin-top:10px" id="surcharges" class="muted"></div>
+    </section>
+
+    <!-- ---------- BOOKINGS LIST ---------- -->
+    <section class="card">
+      <h2>Active bookings</h2>
+      <div id="bookings-list" style="margin-top:12px"></div>
+      <p id="no-bookings" class="muted" style="margin-top:12px">No bookings yet — be the first to book!</p>
+    </section>
+
+    <footer style="margin-top:22px;color:var(--muted);text-align:center;padding:18px 0">
+      © KU QUICKRIDE — Contact/WhatsApp: <a href="https://wa.me/254798081768" target="_blank">0798081768</a> • Pochi la Biashara: 0748026801
+    </footer>
+  </main>
+
+  <!-- ---------- BOOKING MODAL (3-step) ---------- -->
+  <div id="booking-modal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="close-x" id="close-booking">&times;</div>
+
+      <!-- step 1 -->
+      <div id="booking-step-1">
+        <h2>What do you need?</h2>
+        <div style="display:flex;gap:12px;margin-top:12px">
+          <button id="choose-hire" class="btn" style="flex:1">Hire a Bike</button>
+          <button id="choose-delivery" class="btn ghost" style="flex:1">Request Delivery</button>
+        </div>
+        <p class="muted" style="margin-top:10px">Choose a service to continue</p>
+      </div>
+
+      <!-- step 2: form -->
+      <div id="booking-step-2" style="display:none;margin-top:6px">
+        <h2 id="form-title">Booking Details</h2>
+        <form id="booking-form" autocomplete="off">
+          <div class="form-group">
+            <label>Full name</label>
+            <input type="text" id="fullName" required />
+          </div>
+          <div class="form-group">
+            <label>Student ID</label>
+            <input type="text" id="studentId" required />
+          </div>
+          <div class="form-group">
+            <label>Contact (WhatsApp) — e.g., 07XXXXXXXX</label>
+            <input type="tel" id="contact" required />
+          </div>
+
+          <!-- hire fields -->
+          <div id="hire-fields" style="margin-top:10px">
+            <div class="form-group">
+              <label>Number of hours</label>
+              <input type="number" id="hours" min="1" value="1" />
+            </div>
+            <div class="form-group">
+              <label>Pickup point</label>
+              <input type="text" id="pickupPoint" placeholder="e.g. Hostels Gate" />
+            </div>
+          </div>
+
+          <!-- delivery fields -->
+          <div id="delivery-fields" style="display:none;margin-top:10px">
+            <div class="form-group">
+              <label>Pickup location</label>
+              <input type="text" id="pickupLocation" placeholder="e.g. BSSC Room 10" />
+            </div>
+            <div class="form-group">
+              <label>Drop-off zone</label>
+              <select id="dropoffZone"></select>
+            </div>
+            <div class="form-group">
+              <label>Product type</label>
+              <select id="productType"></select>
+            </div>
+          </div>
+
+          <div class="price-display">Total: KES <span id="live-price">0</span></div>
+
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <button type="submit" class="btn" style="flex:1" id="proceed-payment">Proceed to Payment</button>
+            <button type="button" class="btn ghost" id="back-to-step1" style="flex:1">Back</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- step 3: confirm -->
+      <div id="booking-step-3" style="display:none;margin-top:6px">
+        <h2>Confirm & Pay</h2>
+        <div class="card" id="booking-summary" style="background:transparent;border-radius:8px;padding:12px"></div>
+        <p style="margin-top:8px" class="muted"><strong>Payment instructions:</strong> Pay the amount below to <span style="color:var(--accent)">Pochi la Biashara — 0748026801</span></p>
+        <p style="font-weight:700;color:var(--accent)">Amount: KES <span id="final-amount">0</span></p>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="confirm-whatsapp" class="btn" style="flex:1">Confirm Booking via WhatsApp</button>
+          <button id="return-to-form" class="btn ghost" style="flex:1">Edit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- ADMIN LOGIN MODAL ---------- -->
+  <div id="admin-login-modal" class="modal">
+    <div class="modal-card">
+      <div class="close-x" id="close-admin-login">&times;</div>
+      <h2>Admin Login</h2>
+      <p class="muted">Enter admin password to access management tools. 3 attempts maximum.</p>
+      <form id="admin-login-form" style="margin-top:10px">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="admin-password" required />
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button type="submit" class="btn">Login</button>
+          <button type="button" id="close-admin-login-2" class="btn ghost">Cancel</button>
+        </div>
+        <p id="admin-login-msg" class="muted" style="margin-top:8px"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ---------- ADMIN DASHBOARD ---------- -->
+  <div id="admin-dashboard">
+    <div class="admin-wrap container">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <h2 style="color:var(--white)">Admin Dashboard</h2>
+        <div style="display:flex;gap:10px">
+          <button id="admin-export" class="btn">Export Bookings</button>
+          <button id="admin-close" class="btn ghost">Close</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="tabs">
+          <div class="tab active" data-tab="tab-bookings">Bookings</div>
+          <div class="tab" data-tab="tab-riders">Riders</div>
+          <div class="tab" data-tab="tab-pricing">Pricing</div>
+        </div>
+
+        <div id="tab-bookings" class="tab-content active">
+          <div class="card">
+            <h3>Bookings (newest first)</h3>
+            <div style="margin-top:8px">
+              <label class="muted">Filter: 
+                <select id="booking-filter">
+                  <option value="all">All</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="Underway">Underway</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </label>
+            </div>
+            <table id="admin-bookings-table" style="margin-top:12px">
+              <thead><tr><th>Ref</th><th>Name</th><th>Contact</th><th>Type</th><th>Details</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="admin-bookings-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-riders" class="tab-content" style="display:none">
+          <div class="card">
+            <h3>Register / Manage Riders</h3>
+            <form id="rider-register-form" style="margin-top:10px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input id="rider-name" placeholder="Full name" required style="flex:1" />
+                <input id="rider-studentid" placeholder="Student ID" required style="flex:1" />
+                <input id="rider-contact" placeholder="07..." required style="flex:1" />
+                <input id="rider-bike" placeholder="Bike type e.g., Mountain" required style="flex:1" />
+                <button class="btn small" type="submit">Register Rider</button>
+              </div>
+            </form>
+
+            <h4 style="margin-top:12px">Registered Riders</h4>
+            <table style="margin-top:8px">
+              <thead><tr><th>Rider ID</th><th>Name</th><th>Student ID</th><th>Contact</th><th>Bike</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="riders-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-pricing" class="tab-content" style="display:none">
+          <div class="card">
+            <h3>Pricing (zone & surcharges)</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <h4 style="color:var(--white)">Zones</h4>
+                <div id="pricing-zones"></div>
+              </div>
+              <div>
+                <h4 style="color:var(--white)">Surcharges</h4>
+                <div id="pricing-surcharges"></div>
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <button id="pricing-save" class="btn">Save Pricing</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ----------------------------------------------------------------------
+   KU QUICKRIDE — Single-file app (localStorage)
+   - Persists: bookings, riders, pricing
+   - Admin password: Katani#2025 (3 attempts lockout)
+   - WhatsApp notifications via wa.me links (owner, client, rider)
+------------------------------------------------------------------------ */
+
+/* ------------------------- Config / Defaults ------------------------- */
+const OWNER_NUMBER = '254798081768'; // owner's whatsapp
+const ADMIN_PASSWORD = 'Katani#2025';
+const MAX_ADMIN_ATTEMPTS = 3;
+const LOCAL_KEYS = {
+  BOOKINGS: 'kuqr_bookings_v1',
+  RIDERS: 'kuqr_riders_v1',
+  PRICING: 'kuqr_pricing_v1'
+};
+
+// Default pricing
+const DEFAULT_PRICING = {
+  zones: {
+    'Campus': 40,
+    'KM': 80,
+    'Kahawa Sukari': 80,
+    'Wendani': 80,
+    'Kiwanja': 80,
+    'Kahawa West': 80,
+    'China Square': 120,
+    'Bypass': 120,
+    'Githurai': 120
+  },
+  surcharges: {
+    'Documents': 10,
+    'Package': 20
+  },
+  hirePerHour: 40
+};
+
+/* ------------------------- Storage helpers --------------------------- */
+function load(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch(e) {
+    console.error('load error', e);
+    return fallback;
+  }
+}
+function save(key, obj) {
+  localStorage.setItem(key, JSON.stringify(obj));
+}
+
+/* ------------------------- App state --------------------------- */
+let bookings = load(LOCAL_KEYS.BOOKINGS, []); // newest first
+let riders = load(LOCAL_KEYS.RIDERS, []);
+let pricing = load(LOCAL_KEYS.PRICING, DEFAULT_PRICING);
+
+/* ------------------------- Utility functions ------------------------ */
+const $ = id => document.getElementById(id);
+const nl = selector => Array.from(document.querySelectorAll(selector));
+const formatPhoneToIntl = raw => {
+  if(!raw) return '';
+  raw = raw.trim();
+  if(raw.startsWith('+')) raw = raw.slice(1);
+  if(raw.startsWith('0')) return '254' + raw.slice(1);
+  if(raw.startsWith('254')) return raw;
+  // assume missing leading 0
+  return '254' + raw;
+};
+const waOpen = (phone, message) => {
+  const p = formatPhoneToIntl(phone);
+  const url = `https://wa.me/${p}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+};
+
+/* ------------------------- UI / Render ------------------------------ */
+function renderZonesAndSurcharges(){
+  const zc = $('zones-container');
+  const sc = $('surcharges');
+  zc.innerHTML = Object.entries(pricing.zones).map(([z,p]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.02)"><div>${z}</div><div>KES ${p}</div></div>`).join('');
+  sc.textContent = 'Surcharges: ' + Object.entries(pricing.surcharges).map(([k,v]) => `${k}: +KES ${v}`).join(' • ');
+}
+
+function updateStats(){
+  $('stat-total-bookings').textContent = bookings.length;
+  $('stat-riders').textContent = riders.length;
+  $('stat-bikes').textContent = Math.max(riders.length, 0); // you can change to separate bikes count if needed
+}
+
+function renderBookingsList(){
+  const list = $('bookings-list');
+  list.innerHTML = '';
+  if(bookings.length === 0){ $('no-bookings').style.display = 'block'; return; }
+  $('no-bookings').style.display = 'none';
+  bookings.forEach(b => {
+    const wrap = document.createElement('div');
+    wrap.className = 'card';
+    wrap.style.marginTop = '8px';
+    wrap.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <div>
+          <strong style="color:var(--white)">${b.name}</strong> <span class="muted">(${b.studentId})</span><br/>
+          <span class="muted">${b.type} — ${b.details}</span><br/>
+          <span class="muted">Contact: <a href="https://wa.me/${formatPhoneToIntl(b.contact)}" target="_blank">${b.contact}</a></span>
+        </div>
+        <div style="text-align:right">
+          <div style="color:var(--accent);font-weight:700">KES ${b.amount}</div>
+          <div class="muted" style="margin-top:6px">Status: ${b.status}${b.assignedRider? ' • Rider: ' + b.assignedRiderName : ''}</div>
+        </div>
+      </div>
+    `;
+    list.appendChild(wrap);
+  });
+}
+
+/* ------------------------- Booking flow (modal) --------------------- */
+const bookingModal = $('booking-modal');
+const adminLoginModal = $('admin-login-modal');
+const adminDashboard = $('admin-dashboard');
+
+// booking step controls
+const step1 = $('booking-step-1');
+const step2 = $('booking-step-2');
+const step3 = $('booking-step-3');
+
+let bookingContext = { type: null, data: null }; // temp store while user fills
+
+// open booking modal
+function openBookingModal(){
+  bookingContext = { type:null, data:null };
+  step1.style.display='block';
+  step2.style.display='none';
+  step3.style.display='none';
+  // reset form values
+  $('booking-form').reset();
+  // show/hide specific fields
+  document.getElementById('hire-fields').style.display = 'block';
+  document.getElementById('delivery-fields').style.display = 'none';
+  // refill dropoff and product selects
+  fillDropoffAndProduct();
+  $('live-price').textContent = '0';
+  bookingModal.classList.add('open');
+}
+function closeBookingModal(){ bookingModal.classList.remove('open'); }
+
+// step1 handlers
+$('choose-hire').addEventListener('click', () => {
+  bookingContext.type = 'hire';
+  $('form-title').textContent = 'Bike Hire Details';
+  document.getElementById('hire-fields').style.display = 'block';
+  document.getElementById('delivery-fields').style.display = 'none';
+  step1.style.display='none'; step2.style.display='block';
+  calculateLivePrice();
+});
+$('choose-delivery').addEventListener('click', () => {
+  bookingContext.type = 'delivery';
+  $('form-title').textContent = 'Delivery Details';
+  document.getElementById('hire-fields').style.display = 'none';
+  document.getElementById('delivery-fields').style.display = 'block';
+  fillDropoffAndProduct();
+  step1.style.display='none'; step2.style.display='block';
+  calculateLivePrice();
+});
+
+// back to step1
+$('back-to-step1').addEventListener('click', () => {
+  step2.style.display='none'; step1.style.display='block';
+});
+
+// close booking modal
+$('close-booking').addEventListener('click', closeBookingModal);
+
+// fill dropoff and product selects
+function fillDropoffAndProduct(){
+  const drop = $('dropoffZone');
+  const prod = $('productType');
+  if(!drop || !prod) return;
+  drop.innerHTML = Object.keys(pricing.zones).map(z => `<option value="${z}">${z}</option>`).join('');
+  prod.innerHTML = Object.keys(pricing.surcharges).map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// price calculation
+function calculateLivePrice(){
+  let total = 0;
+  if(bookingContext.type === 'hire'){
+    const hours = Math.max(1, Number($('hours').value || 1));
+    total = hours * pricing.hirePerHour;
+  } else if(bookingContext.type === 'delivery'){
+    const zone = $('dropoffZone').value;
+    const product = $('productType').value;
+    total = (pricing.zones[zone] || 0) + (pricing.surcharges[product] || 0);
+  }
+  $('live-price').textContent = total;
+}
+nl('#hours,#dropoffZone,#productType').forEach(el => {
+  if(el) el.addEventListener('input', calculateLivePrice);
+  if(el) el.addEventListener('change', calculateLivePrice);
+});
+
+// proceed to payment — show confirmation summary
+$('booking-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  // form validation minimal
+  const name = $('fullName').value.trim();
+  const sid = $('studentId').value.trim();
+  const contact = $('contact').value.trim();
+  if(!name || !sid || !contact){ alert('Please complete required fields.'); return; }
+
+  // prepare booking data
+  const amount = Number($('live-price').textContent || 0);
+  let details = '';
+  if(bookingContext.type === 'hire'){
+    const hours = Number($('hours').value || 1);
+    const pickup = $('pickupPoint').value || 'N/A';
+    details = `${hours} hour(s) — pickup: ${pickup}`;
+  } else {
+    const pu = $('pickupLocation').value || 'N/A';
+    const zone = $('dropoffZone').value;
+    const product = $('productType').value;
+    details = `${product} — from ${pu} to ${zone}`;
+  }
+
+  // store in bookingContext
+  bookingContext.data = { name, sid, contact, details, amount, type: bookingContext.type === 'hire' ? 'Bike Hire' : 'Delivery' };
+
+  // show summary
+  $('booking-summary').innerHTML = `
+    <p><strong>${bookingContext.data.type}</strong></p>
+    <p><strong>Name:</strong> ${bookingContext.data.name} — <span class="muted">${bookingContext.data.sid}</span></p>
+    <p><strong>Contact:</strong> <a href="https://wa.me/${formatPhoneToIntl(bookingContext.data.contact)}" target="_blank">${bookingContext.data.contact}</a></p>
+    <p><strong>Details:</strong> ${bookingContext.data.details}</p>
+    <p style="margin-top:8px"><strong>Amount:</strong> KES ${bookingContext.data.amount}</p>
+  `;
+  $('final-amount').textContent = bookingContext.data.amount;
+  step2.style.display='none'; step3.style.display='block';
+});
+
+// confirm booking via WhatsApp — final step
+$('confirm-whatsapp').addEventListener('click', () => {
+  const ctx = bookingContext.data;
+  if(!ctx){ alert('Booking data missing.'); return; }
+
+  // create booking object and persist
+  const ref = 'QR-' + Math.floor(1000 + Math.random()*9000);
+  const bookingObj = {
+    ref,
+    name: ctx.name,
+    studentId: ctx.sid,
+    contact: ctx.contact,
+    type: ctx.type,
+    details: ctx.details,
+    amount: ctx.amount,
+    status: 'Pending',
+    createdAt: Date.now(),
+    assignedRider: null,
+    assignedRiderName: null
+  };
+  bookings.unshift(bookingObj);
+  save(LOCAL_KEYS.BOOKINGS, bookings);
+  renderBookingsList();
+  updateStats();
+
+  // notify owner via WhatsApp
+  const ownerMsg = `*NEW BOOKING*\nRef:${ref}\nName:${ctx.name}\nContact:${ctx.contact}\nService:${ctx.type}\nDetails:${ctx.details}\nAmount: KES ${ctx.amount}`;
+  waOpen(OWNER_NUMBER, ownerMsg);
+
+  // confirm to client via wa link too (optional — we'll open to client so they see info)
+  const clientMsg = `Hi ${ctx.name}, your KU QUICKRIDE booking (${ref}) has been received. Amount: KES ${ctx.amount}. Please pay to Pochi la Biashara 0748026801 and reply here with the M-Pesa confirmation.`;
+  waOpen(ctx.contact, clientMsg);
+
+  // close modal
+  closeBookingModal();
+  // reset steps
+  step3.style.display='none';
+  step1.style.display='block';
+  $('booking-form').reset();
+});
+
+/* ------------------------- Admin: login & dashboard ------------------ */
+
+let adminAttempts = 0;
+
+$('btn-open-admin-login').addEventListener('click', () => {
+  adminLoginModal.classList.add('open');
+});
+$('close-admin-login').addEventListener('click', () => adminLoginModal.classList.remove('open'));
+$('close-admin-login-2').addEventListener('click', () => adminLoginModal.classList.remove('open'));
+
+// admin login form
+$('admin-login-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const pw = $('admin-password').value;
+  if(pw === ADMIN_PASSWORD){
+    $('admin-login-msg').textContent = '';
+    adminLoginModal.classList.remove('open');
+    openAdminDashboard();
+  } else {
+    adminAttempts++;
+    const msg = `Incorrect password. Attempt ${adminAttempts} of ${MAX_ADMIN_ATTEMPTS}.`;
+    $('admin-login-msg').textContent = msg;
+    if(adminAttempts >= MAX_ADMIN_ATTEMPTS){
+      alert('Maximum login attempts reached. Admin login disabled.');
+      adminLoginModal.classList.remove('open');
+      $('btn-open-admin-login').disabled = true;
+      $('btn-open-admin-login').textContent = 'Admin (locked)';
+    }
+  }
+});
+
+// open admin dashboard
+function openAdminDashboard(){
+  adminDashboard.style.display = 'block';
+  renderAdminBookings();
+  renderRidersTable();
+  renderPricingEditor();
+}
+
+// close admin dashboard
+$('admin-close').addEventListener('click', () => adminDashboard.style.display = 'none');
+
+// admin tabs
+nl('.tab').forEach(t => t.addEventListener('click', (ev)=>{
+  nl('.tab').forEach(x=>x.classList.remove('active'));
+  nl('.tab-content').forEach(x=>x.style.display='none');
+  t.classList.add('active');
+  const tab = t.dataset.tab;
+  $(tab).style.display = 'block';
+}));
+
+/* ------------------------- Admin: Bookings management ---------------- */
+function renderAdminBookings(){
+  const tbody = $('admin-bookings-body');
+  tbody.innerHTML = '';
+  const filter = $('booking-filter').value || 'all';
+  const list = bookings.filter(b => filter === 'all' ? true : b.status === filter);
+  list.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.ref}</td>
+      <td>${b.name}</td>
+      <td><a href="https://wa.me/${formatPhoneToIntl(b.contact)}" target="_blank">${b.contact}</a></td>
+      <td>${b.type}</td>
+      <td>${b.details}</td>
+      <td>KES ${b.amount}</td>
+      <td>${b.status}</td>
+      <td class="actions">
+        ${actionButtonsForBooking(b)}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateStats();
+}
+
+// generate buttons
+function actionButtonsForBooking(b){
+  const assignBtn = `<button class="btn small" onclick="adminAssignRider('${b.ref}')">Assign Rider</button>`;
+  const confirmBtn = `<button class="btn small" onclick="adminConfirm('${b.ref}')">Confirm</button>`;
+  const cancelBtn = `<button class="btn small ghost" onclick="adminCancel('${b.ref}')">Cancel</button>`;
+  const completeBtn = `<button class="btn small" onclick="adminComplete('${b.ref}')">Complete</button>`;
+  const verifyBtn = `<button class="btn small" onclick="adminVerifyPayment('${b.ref}')">Verify Payment</button>`;
+  // choose by status
+  switch(b.status){
+    case 'Pending': return confirmBtn + assignBtn + cancelBtn;
+    case 'Confirmed': return assignBtn + cancelBtn;
+    case 'Assigned': return completeBtn + cancelBtn;
+    case 'Underway': return completeBtn + cancelBtn;
+    case 'Completed': return verifyBtn;
+    default: return cancelBtn;
+  }
+}
+
+// actions (exposed on window for inline onclick)
+window.adminAssignRider = function(ref){
+  const booking = bookings.find(b => b.ref === ref);
+  if(!booking) return alert('Booking not found');
+  // choose an available rider
+  const available = riders.filter(r => r.status === 'Available');
+  if(available.length === 0) return alert('No available riders.');
+  // simple pick: show a prompt with rider choices
+  const choices = available.map((r,i) => `${i+1}. ${r.name} (${r.bike})`).join('\n');
+  const pick = parseInt(prompt('Assign which rider:\n' + choices));
+  if(isNaN(pick) || pick < 1 || pick > available.length) return;
+  const rider = available[pick-1];
+  // update data
+  rider.status = 'Assigned';
+  booking.assignedRider = rider.id;
+  booking.assignedRiderName = rider.name;
+  booking.status = 'Assigned';
+  save(LOCAL_KEYS.RIDERS, riders);
+  save(LOCAL_KEYS.BOOKINGS, bookings);
+  renderAdminBookings(); renderRidersTable(); renderBookingsList();
+  // notify client and rider via WhatsApp
+  waOpen(booking.contact, `Hi ${booking.name}, your booking ${booking.ref} has been assigned to ${rider.name}. Contact: ${rider.contact}`);
+  waOpen(rider.contact, `Hello ${rider.name}, new assignment:\nRef: ${booking.ref}\nClient: ${booking.name}\nContact: ${booking.contact}\nDetails: ${booking.details}`);
+  alert(`Assigned ${rider.name} to ${booking.ref}`);
+};
+
+window.adminConfirm = function(ref){
+  const booking = bookings.find(b => b.ref === ref);
+  if(!booking) return;
+  booking.status = 'Confirmed';
+  save(LOCAL_KEYS.BOOKINGS, bookings);
+  renderAdminBookings(); renderBookingsList();
+  waOpen(booking.contact, `Hi ${booking.name}, your booking ${booking.ref} has been confirmed by KU QUICKRIDE.`);
+  alert('Booking confirmed.');
+};
+
+window.adminCancel = function(ref){
+  const booking = bookings.find(b => b.ref === ref);
+  if(!booking) return;
+  const reason = prompt('Reason for cancelling (optional):') || 'No reason given';
+  booking.status = 'Cancelled';
+  save(LOCAL_KEYS.BOOKINGS, bookings);
+  renderAdminBookings(); renderBookingsList();
+  waOpen(booking.contact, `Hi ${booking.name}, your booking ${booking.ref} has been cancelled. Reason: ${reason}`);
+  alert('Booking cancelled.');
+};
+
+window.adminComplete = function(ref){
+  const booking = bookings.find(b => b.ref === ref);
+  if(!booking) return;
+  booking.status = 'Completed';
+  // free rider if assigned
+  if(booking.assignedRider){
+    const rr = riders.find(r => r.id === booking.assignedRider);
+    if(rr) rr.status = 'Available';
+  }
+  save(LOCAL_KEYS.RIDERS, riders);
+  save(LOCAL_KEYS.BOOKINGS, bookings);
+  renderAdminBookings(); renderRidersTable(); renderBookingsList();
+  waOpen(booking.contact, `Hi ${booking.name}, your booking ${booking.ref} is completed. Please pay KES ${booking.amount} to Pochi la Biashara 0748026801.`);
+  alert('Marked complete and notified client.');
+};
+
+window.adminVerifyPayment = function(ref){
+  const booking = bookings.find(b => b.ref === ref);
+  if(!booking) return;
+  booking.status = 'Paid & Complete';
+  save(LOCAL_KEYS.BOOKINGS, bookings);
+  renderAdminBookings(); renderBookingsList();
+  alert('Payment marked as verified.');
+};
+
+/* ------------------------- Admin: Riders management ----------------- */
+$('rider-register-form').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const name = $('rider-name').value.trim();
+  const sid = $('rider-studentid').value.trim();
+  const contact = $('rider-contact').value.trim();
+  const bike = $('rider-bike').value.trim();
+  if(!name || !sid || !contact || !bike) return alert('Complete rider info.');
+  const rider = { id: 'R-' + Date.now(), name, studentId: sid, contact: formatPhoneToIntl(contact), bike, status: 'Available', verified: true, createdAt: Date.now() };
+  riders.push(rider);
+  save(LOCAL_KEYS.RIDERS, riders);
+  renderRidersTable();
+  $('rider-register-form').reset();
+  // notify rider via WhatsApp
+  waOpen(rider.contact, `Hello ${rider.name}, you have been registered as a KU QUICKRIDE rider. Welcome!`);
+  alert('Rider registered and notified via WhatsApp.');
+});
+
+function renderRidersTable(){
+  const tbody = $('riders-body');
+  tbody.innerHTML = '';
+  riders.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.id}</td><td>${r.name}</td><td>${r.studentId}</td><td><a href="https://wa.me/${r.contact}" target="_blank">${r.contact}</a></td><td>${r.bike}</td><td>${r.status}</td><td>
+      <button class="btn small" onclick="adminMessageRider('${r.id}')">Message</button>
+      <button class="btn small ghost" onclick="adminRemoveRider('${r.id}')">Remove</button>
+    </td>`;
+    tbody.appendChild(tr);
+  });
+  updateStats();
+}
+
+// expose functions for rider actions
+window.adminMessageRider = function(rid){
+  const r = riders.find(x => x.id === rid);
+  if(!r) return;
+  waOpen(r.contact, `Hi ${r.name}, admin wants to contact you regarding KU QUICKRIDE.`);
+};
+window.adminRemoveRider = function(rid){
+  if(!confirm('Remove rider permanently?')) return;
+  riders = riders.filter(r => r.id !== rid);
+  save(LOCAL_KEYS.RIDERS, riders);
+  renderRidersTable();
+  renderBookingsList();
+  alert('Rider removed.');
+}
+
+/* ------------------------- Pricing editor --------------------------- */
+function renderPricingEditor(){
+  const zonesContainer = $('pricing-zones');
+  const surchargesContainer = $('pricing-surcharges');
+  zonesContainer.innerHTML = Object.entries(pricing.zones).map(([z,p]) => `<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px">
+    <div style="flex:1"><label style="color:var(--muted)">${z}</label></div>
+    <div style="width:140px"><input type="number" data-zone="${z}" value="${p}" style="width:100%"></div>
+  </div>`).join('');
+  surchargesContainer.innerHTML = Object.entries(pricing.surcharges).map(([k,v]) => `<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px">
+    <div style="flex:1"><label style="color:var(--muted)">${k}</label></div>
+    <div style="width:140px"><input type="number" data-surcharge="${k}" value="${v}" style="width:100%"></div>
+  </div>`).join('');
+}
+
+// save pricing
+$('pricing-save').addEventListener('click', ()=>{
+  // zones
+  nl('[data-zone]').forEach(inp => {
+    const z = inp.dataset.zone;
+    pricing.zones[z] = Number(inp.value) || pricing.zones[z];
+  });
+  nl('[data-surcharge]').forEach(inp => {
+    const k = inp.dataset.surcharge;
+    pricing.surcharges[k] = Number(inp.value) || pricing.surcharges[k];
+  });
+  save(LOCAL_KEYS.PRICING, pricing);
+  renderZonesAndSurcharges();
+  fillDropoffAndProduct();
+  alert('Pricing saved.');
+});
+
+/* ------------------------- Export/Import ---------------------------- */
+$('admin-export').addEventListener('click', ()=>{
+  const payload = { bookings, riders, pricing, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `kuquickride_export_${Date.now()}.json`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export started — check your downloads.');
+});
+
+/* ------------------------- small helpers & init --------------------- */
+function showToast(msg){
+  // simple toast using alert replacement
+  const t = document.createElement('div');
+  t.style.position='fixed';t.style.left='50%';t.style.transform='translateX(-50%)';t.style.bottom='30px';t.style.padding='12px 16px';
+  t.style.background='var(--success)';t.style.color='#041225';t.style.borderRadius='8px';t.style.zIndex=9999;t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),400) }, 2600);
+}
+
+// booking quick open
+$('btn-open-book').addEventListener('click', openBookingModal);
+$('hero-book-btn').addEventListener('click', openBookingModal);
+$('close-booking').addEventListener('keydown', (e) => { if(e.key==='Enter') closeBookingModal(); });
+
+// admin login modal show
+$('btn-open-admin-login').addEventListener('click', () => adminLoginModal.classList.add('open'));
+
+// admin modal close
+$('close-admin-login').addEventListener('click', ()=> adminLoginModal.classList.remove('open'));
+
+// admin dashboard close
+$('admin-close').addEventListener('click', ()=> adminDashboard.style.display='none');
+
+// booking cancel via close X
+$('close-booking').addEventListener('click', ()=> bookingModal.classList.remove('open'));
+
+// admin login cancel
+$('close-admin-login-2').addEventListener('click', ()=> adminLoginModal.classList.remove('open'));
+
+// booking modal keyboard support (escape)
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    bookingModal.classList.remove('open');
+    adminLoginModal.classList.remove('open');
+    if(adminDashboard.style.display === 'block'){ /* do not auto-close admin */ }
+  }
+});
+
+// booking form listeners for live price
+nl('#hours,#dropoffZone,#productType').forEach(el => { if(el) el.addEventListener('input', calculateLivePrice); });
+
+// filter bookings
+$('booking-filter').addEventListener('change', renderAdminBookings);
+
+// initial render
+renderZonesAndSurcharges();
+fillDropoffAndProduct();
+updateStats();
+renderBookingsList();
+renderRidersTable();
+renderAdminBookings();
+renderPricingEditor();
+
+/* ------------------------- small: confirm edit button ---------------- */
+$('return-to-form').addEventListener('click', ()=>{
+  step3.style.display='none';
+  step2.style.display='block';
+});
+</script>
+</body>
+</html>
